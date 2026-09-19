@@ -1,0 +1,6 @@
+{
+  "name": "DARUKAA.EARTH - Geospatial Data Analytics Platform",
+  "description": "Enterprise geospatial platform for managing, mapping, and analyzing carbon credit and biodiversity restoration projects with Mapbox GL, PostGIS, and Chart.js.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

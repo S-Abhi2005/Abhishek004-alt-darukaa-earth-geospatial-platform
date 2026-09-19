@@ -1,0 +1,75 @@
+name: DARUKAA.EARTH Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  frontend-verify:
+    name: Frontend Lint & Production Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      - name: Run TypeScript & Code Linter
+        run: npm run lint
+
+      - name: Run Production Bundle Build
+        run: npm run build
+
+  backend-verify:
+    name: Backend PostGIS & Pytest Suite
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: darukaa_earth_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Geospatial Libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev gdal-bin libgdal-dev libgeos-dev
+
+      - name: Install Python Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Execute Pytest Test Suite
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/darukaa_earth_test
+          SECRET_KEY: test-key-2026
+        run: |
+          pytest backend/tests -v
